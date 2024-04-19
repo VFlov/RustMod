@@ -474,7 +474,34 @@ namespace Oxide.Plugins
             if (flameThrower != null) iItem.flamefuel = flameThrower.ammo;
             Chainsaw chainsaw = item.GetHeldEntity()?.GetComponent<Chainsaw>();
             if (chainsaw != null) iItem.flamefuel = chainsaw.ammo;
-            if (item.contents != null foreach ())
-
+            if (item.contents != null)
+            {
+                foreach (var mod in item.contents.itemList)
+                {
+                    if (mod.info.itemid != 0) iItem.mods.Add(SaveItem(mod));
+                }
+            }
+            if (item.info.category.ToString() != "Weapon") return iItem;
+                BaseProjectile weapon = item.GetHeldEntity() as BaseProjectile;
+            if (weapon == null) return iItem;
+            if (weapon.primaryMagazine == null) return iItem;
+            iItem.amount = weapon.primaryMagazine.contents;
+            iItem.ammotype = weapon.primaryMagazine.ammoType.shortname;
+            iItem.weapon = true;
+            return iItem;
+        }
+        List<Item> RestoreItems(List<SavedItem> sItems)
+        {
+            return sItems.Select(sItem =>
+            {
+                if (sItem.weapon) return BuildWeapon(sItem);
+                return BuildItem(sItem);
+            });
+        }
+        Item BuildItem(SavedItem sItem)
+        {
+            if (sItem.amount < 1) sItem.amount = 1;
+            Item item = ItemManager.CreateByItemID(sItem.itemid, sItem.amount, sItem.skinid);
+            if (!string.IsNullOrEmpty(sItem.name)) item.name = sItem.name;
         }
     }
